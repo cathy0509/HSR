@@ -1,68 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高鐵秘書確認</title>
+    <title>高鐵秘書確認系統</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f8f9fa; }
-        .item { margin-bottom: 10px; }
-        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { width: 100%; padding: 12px; background: #F45F00; color: white; border: none; border-radius: 4px; font-weight: bold; }
+        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background-color: #f0f2f5; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h2 { color: #F45F00; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #F45F00; padding-bottom: 10px; }
+        .section-title { font-size: 14px; color: #888; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+        .field { flex: 1; }
+        label { display: block; font-size: 12px; margin-bottom: 3px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #fff; }
+        input:focus { border-color: #F45F00; outline: none; box-shadow: 0 0 5px rgba(244,95,0,0.2); }
+        .highlight input { color: #F45F00; font-weight: bold; font-size: 18px; border: 1.5px solid #F45F00; }
+        button { 
+            width: 100%; padding: 16px; background-color: #F45F00; color: white; 
+            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; 
+            cursor: pointer; margin-top: 25px; transition: 0.3s;
+        }
+        button:active { background-color: #d45200; transform: scale(0.98); }
+        #loading { text-align: center; color: #666; margin-top: 50px; }
     </style>
 </head>
 <body>
-    <h3>🚄 確認訂票資訊</h3>
-    <div class="item"><label>行程</label><input type="text" id="route"></div>
-    <div class="item"><label>時間</label><input type="text" id="time"></div>
-    <div class="item"><label>車次</label><input type="text" id="trainNo"></div>
-    <div class="item"><label>座位</label><input type="text" id="seat"></div>
-    <hr>
-    <div class="item"><label>訂位代號</label><input type="text" id="pnr"></div>
-    <div class="item"><label>驗證碼</label><input type="text" id="id4" value="0114"></div>
-    <button id="btn">確認分享給主管</button>
 
-    <script>
-        liff.init({ liffId: "2009593705-UXqntLN7" }).then(() => {
-            if (!liff.isLoggedIn()) { liff.login(); }
+<div id="app" class="card">
+    <h2>🚄 訂票資訊確認</h2>
+    
+    <div class="section-title">行程與時間</div>
+    <div class="row">
+        <div class="field"><label>起點站</label><input type="text" id="sl"></div>
+        <div class="field"><label>終點站</label><input type="text" id="dl"></div>
+    </div>
+    <div class="row">
+        <div class="field"><label>出發時間</label><input type="text" id="st"></div>
+        <div class="field"><label>抵達時間</label><input type="text" id="et"></div>
+    </div>
+
+    <div class="section-title">列車資訊</div>
+    <div class="row">
+        <div class="field"><label>高鐵車次</label><input type="text" id="trainNo"></div>
+        <div class="field"><label>座位資訊</label><input type="text" id="seat"></div>
+    </div>
+
+    <div class="section-title">取票憑證 (主管複製用)</div>
+    <div class="field highlight">
+        <label>訂位代號</label>
+        <input type="text" id="pnr">
+    </div>
+    <div class="field highlight" style="margin-top: 10px;">
+        <label>訂位驗證碼</label>
+        <input type="text" id="id4">
+    </div>
+
+    <button id="btnShare">分享給主管</button>
+</div>
+
+<script>
+    // 請確認此 ID 與您的 LINE Login Channel 一致
+    const myLiffId = '2009593705-UXqntLN7'; 
+
+    liff.init({ liffId: myLiffId }).then(() => {
+        if (!liff.isLoggedIn()) {
+            liff.login();
+        } else {
+            // 解析網址參數並解碼
             const p = new URLSearchParams(window.location.search);
-            // 自動填入 Python 傳過來的資料
-            document.getElementById('route').value = (p.get('sl') || '') + "-" + (p.get('dl') || '');
-            document.getElementById('time').value = (p.get('st') || '') + "-" + (p.get('et') || '');
+            
+            // 填入資料 (decodeURIComponent 處理中文字)
+            document.getElementById('sl').value = p.get('sl') || '';
+            document.getElementById('dl').value = p.get('dl') || '';
+            document.getElementById('st').value = p.get('st') || '';
+            document.getElementById('et').value = p.get('et') || '';
             document.getElementById('trainNo').value = p.get('trainNo') || '';
             document.getElementById('seat').value = p.get('seat') || '';
             document.getElementById('pnr').value = p.get('pnr') || '';
             document.getElementById('id4').value = p.get('id4') || '0114';
-        });
+        }
+    }).catch((err) => {
+        alert('LIFF 初始化失敗，請檢查 ID 是否正確');
+    });
 
-        document.getElementById('btn').onclick = () => {
-            const pnr = document.getElementById('pnr').value;
-            const id4 = document.getElementById('id4').value;
-            liff.shareTargetPicker([{
-                "type": "flex", "altText": "高鐵行程資訊",
-                "contents": {
-                    "type": "bubble",
-                    "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程通知", "color": "#ffffff"}], "backgroundColor": "#F45F00" },
-                    "body": {
-                        "type": "box", "layout": "vertical", "contents": [
-                            { "type": "text", "text": document.getElementById('route').value, "weight": "bold", "size": "lg" },
-                            { "type": "text", "text": "時間：" + document.getElementById('time').value },
-                            { "type": "text", "text": "車次：" + document.getElementById('trainNo').value + " / 座位：" + document.getElementById('seat').value },
-                            { "type": "separator", "margin": "md" },
-                            { "type": "text", "text": "訂位代號：" + pnr, "color": "#F45F00", "weight": "bold" },
-                            { "type": "text", "text": "驗證碼：" + id4, "color": "#F45F00", "weight": "bold" }
-                        ]
-                    },
-                    "footer": {
-                        "type": "box", "layout": "vertical", "contents": [
-                            { "type": "button", "action": { "type": "clipboard", "label": "複製代號", "clipboardText": pnr }, "style": "primary", "color": "#F45F00" },
-                            { "type": "button", "action": { "type": "clipboard", "label": "複製驗證碼", "clipboardText": id4 } }
-                        ]
+    document.getElementById('btnShare').addEventListener('click', () => {
+        const d = {
+            pnr: document.getElementById('pnr').value,
+            id4: document.getElementById('id4').value,
+            train: document.getElementById('trainNo').value,
+            seat: document.getElementById('seat').value,
+            route: document.getElementById('sl').value + " → " + document.getElementById('dl').value,
+            time: document.getElementById('st').value + " - " + document.getElementById('et').value
+        };
+
+        if (!d.pnr || d.pnr === '待確認') {
+            alert('請先輸入正確的訂位代號');
+            return;
+        }
+
+        // 呼叫分享視窗
+        if (liff.isApiAvailable('shareTargetPicker')) {
+            liff.shareTargetPicker([
+                {
+                    "type": "flex",
+                    "altText": "🚄 高鐵行程通知 (" + d.route + ")",
+                    "contents": {
+                        "type": "bubble",
+                        "header": {
+                            "type": "box", "layout": "vertical",
+                            "contents": [{"type": "text", "text": "🚄 高鐵行程通知", "color": "#ffffff", "weight": "bold"}],
+                            "backgroundColor": "#F45F00"
+                        },
+                        "body": {
+                            "type": "box", "layout": "vertical", "spacing": "md",
+                            "contents": [
+                                { "type": "text", "text": d.route, "weight": "bold", "size": "xl" },
+                                { "type": "text", "text": "時間：" + d.time, "size": "sm" },
+                                { "type": "text", "text": "車次：" + d.train + " / 座位：" + d.seat, "size": "sm" },
+                                { "type": "separator", "margin": "lg" },
+                                { "type": "text", "text": "【取票資訊】", "size": "xs", "color": "#888888" },
+                                { "type": "text", "text": "訂位代號：" + d.pnr, "weight": "bold", "size": "lg", "color": "#F45F00" },
+                                { "type": "text", "text": "驗證碼：" + d.id4, "weight": "bold", "size": "lg", "color": "#F45F00" }
+                            ]
+                        },
+                        "footer": {
+                            "type": "box", "layout": "vertical", "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "button", "style": "primary", "color": "#F45F00",
+                                    "action": { "type": "clipboard", "label": "複製訂位代號", "clipboardText": d.pnr }
+                                },
+                                {
+                                    "type": "button", "style": "secondary",
+                                    "action": { "type": "clipboard", "label": "複製驗證碼", "clipboardText": d.id4 }
+                                }
+                            ]
+                        }
                     }
                 }
-            }]).then(() => liff.closeWindow());
-        };
-    </script>
+            ]).then((res) => {
+                if (res) liff.closeWindow();
+            }).catch((error) => {
+                alert('分享失敗，請確認是否已開啟 shareTargetPicker 權限');
+            });
+        } else {
+            alert('此裝置不支援分享功能');
+        }
+    });
+</script>
+
 </body>
 </html>
