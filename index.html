@@ -1,83 +1,73 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高鐵秘書確認系統</title>
+    <title>高鐵資訊確認</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f0f2f5; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        h2 { color: #F45F00; text-align: center; border-bottom: 2px solid #F45F00; padding-bottom: 10px; }
-        .field { margin-top: 10px; }
-        label { display: block; font-size: 12px; color: #888; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .highlight input { color: #F45F00; font-weight: bold; border: 1px solid #F45F00; }
-        button { width: 100%; padding: 15px; background-color: #F45F00; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 12px; max-width: 400px; margin: auto; }
+        input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #F45F00; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        label { font-size: 12px; color: #666; }
     </style>
 </head>
 <body>
-
-<div class="card">
-    <h2>🚄 訂票資訊確認</h2>
-    <div class="field"><label>乘車日期</label><input type="text" id="date"></div>
-    <div style="display:flex; gap:10px;">
-        <div class="field" style="flex:1;"><label>起點</label><input type="text" id="sl"></div>
-        <div class="field" style="flex:1;"><label>終點</label><input type="text" id="dl"></div>
+    <div class="card">
+        <h2 style="color:#F45F00; text-align:center;">🚄 資訊確認</h2>
+        <label>日期</label><input type="text" id="date">
+        <label>行程</label><input type="text" id="route">
+        <label>時間</label><input type="text" id="time">
+        <label>車次 / 座位</label><input type="text" id="info">
+        <label style="color:#F45F00; font-weight:bold;">訂位代號</label><input type="text" id="pnr" style="border:1px solid #F45F00;">
+        <label>驗證碼</label><input type="text" id="id4" value="0114">
+        <button id="btn">分享給主管</button>
     </div>
-    <div style="display:flex; gap:10px;">
-        <div class="field" style="flex:1;"><label>出發</label><input type="text" id="st"></div>
-        <div class="field" style="flex:1;"><label>抵達</label><input type="text" id="et"></div>
-    </div>
-    <div style="display:flex; gap:10px;">
-        <div class="field" style="flex:1;"><label>車次</label><input type="text" id="trainNo"></div>
-        <div class="field" style="flex:1;"><label>座位</label><input type="text" id="seat"></div>
-    </div>
-    <div class="field highlight"><label>訂位代號</label><input type="text" id="pnr"></div>
-    <div class="field highlight"><label>驗證碼</label><input type="text" id="id4"></div>
-    <button id="btnShare">分享給主管</button>
-</div>
 
-<script>
-    const myLiffId = '2009593705-UXqntLN7'; 
-    liff.init({ liffId: myLiffId }).then(() => {
-        if (!liff.isLoggedIn()) { liff.login(); }
-        const p = new URLSearchParams(window.location.search);
-        document.getElementById('date').value = p.get('date') || '';
-        document.getElementById('sl').value = p.get('sl') || '';
-        document.getElementById('dl').value = p.get('dl') || '';
-        document.getElementById('st').value = p.get('st') || '';
-        document.getElementById('et').value = p.get('et') || '';
-        document.getElementById('trainNo').value = p.get('trainNo') || '';
-        document.getElementById('seat').value = p.get('seat') || '';
-        document.getElementById('pnr').value = p.get('pnr') || '';
-        document.getElementById('id4').value = p.get('id4') || '0114';
-    });
+    <script>
+        const liffId = "2009593705-UXqntLN7";
+        
+        liff.init({ liffId }).then(() => {
+            if (!liff.isLoggedIn()) { liff.login(); }
+            
+            // 解析網址參數 (關鍵：使用 decodeURIComponent)
+            const p = new URLSearchParams(window.location.search);
+            document.getElementById('date').value = p.get('date') || '';
+            document.getElementById('route').value = (p.get('sl') || '') + " → " + (p.get('dl') || '');
+            document.getElementById('time').value = (p.get('st') || '') + " - " + (p.get('et') || '');
+            document.getElementById('info').value = "車次 " + (p.get('tn') || '') + " / " + (p.get('seat') || '');
+            document.getElementById('pnr').value = p.get('pnr') || '';
+        });
 
-    document.getElementById('btnShare').onclick = () => {
-        const d = {
-            date: document.getElementById('date').value,
-            pnr: document.getElementById('pnr').value,
-            id4: document.getElementById('id4').value,
-            train: document.getElementById('trainNo').value,
-            seat: document.getElementById('seat').value,
-            route: document.getElementById('sl').value + " → " + document.getElementById('dl').value,
-            time: document.getElementById('st').value + " - " + document.getElementById('et').value
-        };
+        document.getElementById('btn').onclick = () => {
+            const d = {
+                pnr: document.getElementById('pnr').value,
+                id4: document.getElementById('id4').value,
+                msg: document.getElementById('route').value + "\n日期：" + document.getElementById('date').value + "\n時間：" + document.getElementById('time').value + "\n" + document.getElementById('info').value
+            };
 
-        liff.shareTargetPicker([{
-            "type": "flex",
-            "altText": "🚄 高鐵行程通知 (" + d.date + ")",
-            "contents": {
-                "type": "bubble",
-                "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程通知", "color": "#ffffff", "weight": "bold"}], "backgroundColor": "#F45F00" },
-                "body": {
-                    "type": "box", "layout": "vertical", "spacing": "sm",
-                    "contents": [
-                        { "type": "text", "text": d.date, "weight": "bold", "color": "#F45F00" },
-                        { "type": "text", "text": d.route, "weight": "bold", "size": "xl" },
-                        { "type": "text", "text": "時間：" + d.time, "size": "sm" },
-                        { "type": "text", "text": "車次：" + d.train + " / 座位：" + d.seat, "size": "sm" },
+            liff.shareTargetPicker([{
+                "type": "flex", "altText": "🚄 高鐵行程通知",
+                "contents": {
+                    "type": "bubble",
+                    "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程通知", "color": "#ffffff"}], "backgroundColor": "#F45F00" },
+                    "body": { "type": "box", "layout": "vertical", "spacing": "sm", "contents": [
+                        { "type": "text", "text": document.getElementById('date').value, "color": "#F45F00", "weight": "bold" },
+                        { "type": "text", "text": document.getElementById('route').value, "weight": "bold", "size": "xl" },
+                        { "type": "text", "text": "時間：" + document.getElementById('time').value, "size": "sm" },
+                        { "type": "text", "text": document.getElementById('info').value, "size": "sm" },
                         { "type": "separator", "margin": "md" },
-                        { "type": "text", "text": "訂位代號：" + d.pnr, "weight": "bold", "size": "lg", "color": "#F45F00" },
-                        { "type": "text", "text": "驗證碼：" + d.id4, "weight": "bold", "size": "lg", "color": "#F
+                        { "type": "text", "text": "訂位代號：" + d.pnr, "color": "#F45F00", "weight": "bold", "size": "lg" },
+                        { "type": "text", "text": "驗證碼：" + d.id4, "color": "#F45F00", "weight": "bold", "size": "lg" }
+                    ]},
+                    "footer": { "type": "box", "layout": "vertical", "spacing": "sm", "contents": [
+                        { "type": "button", "style": "primary", "color": "#F45F00", "action": { "type": "clipboard", "label": "複製訂位代號", "clipboardText": d.pnr } },
+                        { "type": "button", "style": "secondary", "action": { "type": "clipboard", "label": "複製驗證碼", "clipboardText": d.id4 } }
+                    ]}
+                }
+            }]).then(() => liff.closeWindow()).catch(e => alert("分享失敗，請檢查權限設定"));
+        };
+    </script>
+</body>
+</html>
