@@ -3,131 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高鐵秘書資訊確認</title>
+    <title>高鐵秘書系統 v6</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 20px; background-color: #f4f7f9; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 16px; max-width: 450px; margin: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        h2 { color: #F45F00; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #F45F00; padding-bottom: 10px; }
-        .section-title { font-size: 14px; font-weight: bold; color: #F45F00; margin-top: 15px; background: #fff5ee; padding: 5px 10px; border-radius: 4px; }
-        .field { margin-top: 10px; }
-        label { display: block; font-size: 12px; color: #888; margin-bottom: 2px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; background: #fafafa; }
-        .highlight input { color: #F45F00; font-weight: bold; border-color: #F45F00; background: #fff; }
-        button#btnShare { width: 100%; padding: 16px; background: #F45F00; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 25px; transition: 0.3s; }
-        button#btnShare:active { background: #d45200; transform: scale(0.98); }
+        body { font-family: -apple-system, sans-serif; padding: 15px; background-color: #f4f7f9; }
+        .card { background: white; padding: 20px; border-radius: 15px; max-width: 400px; margin: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h3 { color: #F45F00; text-align: center; margin-top: 0; border-bottom: 2px solid #F45F00; padding-bottom: 10px; }
+        .group { border-top: 1px solid #eee; margin-top: 15px; padding-top: 10px; }
+        label { font-size: 11px; color: #999; display: block; margin-bottom: 2px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 8px; font-size: 15px; background: #fafafa; }
+        .pnr-field { color: #F45F00; font-weight: bold; border-color: #F45F00; background: #fff; font-size: 18px; }
+        button#btnShare { width: 100%; padding: 16px; background: #F45F00; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 10px rgba(244, 95, 0, 0.3); }
+        button#btnShare:active { transform: scale(0.98); background: #d45200; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🚄 訂票資訊確認</h2>
+    <h3>🚄 訂票資訊核對</h3>
     
-    <div class="section-title">去程行程</div>
-    <div class="field"><label>日期</label><input type="text" id="date1"></div>
-    <div style="display:flex; gap:10px;">
-        <div class="field" style="flex:1;"><label>起點</label><input type="text" id="sl1"></div>
-        <div class="field" style="flex:1;"><label>終點</label><input type="text" id="dl1"></div>
-    </div>
-    <div style="display:flex; gap:10px;">
-        <div class="field" style="flex:1;"><label>時間</label><input type="text" id="time1"></div>
-        <div class="field" style="flex:1;"><label>車次/座位</label><input type="text" id="seat1"></div>
+    <div class="group">
+        <label>【去程行程】</label>
+        <input type="text" id="d1" placeholder="日期">
+        <input type="text" id="r1" placeholder="起點 → 終點">
+        <input type="text" id="s1" placeholder="車次 / 座位">
     </div>
 
-    <div id="returnArea" style="display:none;">
-        <div class="section-title">回程行程</div>
-        <div class="field"><label>日期</label><input type="text" id="date2"></div>
-        <div style="display:flex; gap:10px;">
-            <div class="field" style="flex:1;"><label>起點</label><input type="text" id="sl2"></div>
-            <div class="field" style="flex:1;"><label>終點</label><input type="text" id="dl2"></div>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <div class="field" style="flex:1;"><label>時間</label><input type="text" id="time2"></div>
-            <div class="field" style="flex:1;"><label>車次/座位</label><input type="text" id="seat2"></div>
-        </div>
+    <div id="reArea" class="group" style="display:none;">
+        <label>【回程行程】</label>
+        <input type="text" id="d2">
+        <input type="text" id="r2">
+        <input type="text" id="s2">
     </div>
 
-    <div class="section-title">取票資訊</div>
-    <div class="field highlight"><label>訂位代號</label><input type="text" id="pnr"></div>
-    <div class="field"><label>驗證碼 (預設)</label><input type="text" id="id4" value="0114"></div>
-    
-    <button id="btnShare">確認並分享給主管</button>
+    <div class="group">
+        <label>訂位代號 (PNR)</label>
+        <input type="text" id="pnr" class="pnr-field">
+        <label>取票驗證碼 (預設)</label>
+        <input type="text" id="id4" value="0114" class="pnr-field">
+    </div>
+
+    <button id="btnShare">確認並發送給長官</button>
 </div>
 
 <script>
-    const myLiffId = '2009593705-UXqntLN7'; 
-    let hasReturn = false;
+    const liffId = '2009593705-UXqntLN7';
+    let isRe = false;
 
-    liff.init({ liffId: myLiffId }).then(() => {
-        if (!liff.isLoggedIn()) { 
-            liff.login(); 
-        } else {
-            const p = new URLSearchParams(window.location.search);
-            
-            // 填入去程
-            document.getElementById('date1').value = decodeURIComponent(p.get('date1') || '');
-            document.getElementById('sl1').value = decodeURIComponent(p.get('sl1') || '');
-            document.getElementById('dl1').value = decodeURIComponent(p.get('dl1') || '');
-            document.getElementById('time1').value = (p.get('st1') || '') + " - " + (p.get('et1') || '');
-            document.getElementById('seat1').value = (p.get('tn1') || '') + "車次 / " + decodeURIComponent(p.get('seat1') || '');
-            document.getElementById('pnr').value = p.get('pnr') || '';
+    liff.init({ liffId: liffId }).then(() => {
+        if (!liff.isLoggedIn()) { liff.login(); }
+        const p = new URLSearchParams(window.location.search);
+        
+        // 填入去程
+        document.getElementById('d1').value = decodeURIComponent(p.get('date1') || '');
+        document.getElementById('r1').value = decodeURIComponent(p.get('sl1') || '') + " → " + decodeURIComponent(p.get('dl1') || '');
+        document.getElementById('s1').value = (p.get('tn1') || '') + " 車次 / " + decodeURIComponent(p.get('seat1') || '');
+        document.getElementById('pnr').value = p.get('pnr') || '';
 
-            // 檢查並填入回程
-            if (p.get('sl2')) {
-                hasReturn = true;
-                document.getElementById('returnArea').style.display = 'block';
-                document.getElementById('date2').value = decodeURIComponent(p.get('date2') || '');
-                document.getElementById('sl2').value = decodeURIComponent(p.get('sl2') || '');
-                document.getElementById('dl2').value = decodeURIComponent(p.get('dl2') || '');
-                document.getElementById('time2').value = (p.get('st2') || '') + " - " + (p.get('et2') || '');
-                document.getElementById('seat2').value = (p.get('tn2') || '') + "車次 / " + decodeURIComponent(p.get('seat2') || '');
-            }
+        // 判斷並填入回程
+        if (p.get('sl2')) {
+            isRe = true;
+            document.getElementById('reArea').style.display = 'block';
+            document.getElementById('d2').value = decodeURIComponent(p.get('date2') || '');
+            document.getElementById('r2').value = decodeURIComponent(p.get('sl2') || '') + " → " + decodeURIComponent(p.get('dl2') || '');
+            document.getElementById('s2').value = (p.get('tn2') || '') + " 車次 / " + decodeURIComponent(p.get('seat2') || '');
         }
     });
 
     document.getElementById('btnShare').onclick = () => {
         const pnr = document.getElementById('pnr').value;
         const id4 = document.getElementById('id4').value;
-        
-        // 準備 Flex Message 內容
-        const contents = {
+
+        // 建立給長官的專業 Flex 卡片
+        const bubble = {
             "type": "bubble",
-            "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程 取票通知", "color": "#ffffff", "weight": "bold"}], "backgroundColor": "#F45F00" },
+            "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程 取票通知", "color": "#ffffff", "weight": "bold", "size": "md"}], "backgroundColor": "#F45F00" },
             "body": {
                 "type": "box", "layout": "vertical", "spacing": "md",
                 "contents": [
-                    { "type": "text", "text": "【去程】 " + document.getElementById('sl1').value + " → " + document.getElementById('dl1').value, "weight": "bold", "size": "md" },
-                    { "type": "text", "text": document.getElementById('date1').value + "  " + document.getElementById('time1').value, "size": "sm", "color": "#666666" },
-                    { "type": "text", "text": document.getElementById('seat1').value, "size": "sm", "color": "#666666" }
+                    { "type": "text", "text": "【去程】 " + document.getElementById('r1').value, "weight": "bold", "size": "md" },
+                    { "type": "text", "text": document.getElementById('d1').value + "  " + document.getElementById('s1').value, "size": "sm", "color": "#666666", "wrap": true },
+                    { "type": "separator", "margin": "lg" },
+                    { "type": "box", "layout": "vertical", "margin": "lg", "contents": [
+                        { "type": "text", "text": "訂位代號 (PNR)", "size": "xs", "color": "#aaaaaa" },
+                        { "type": "text", "text": pnr, "weight": "bold", "size": "xxl", "color": "#F45F00", "margin": "xs" },
+                        { "type": "text", "text": "驗證碼 (ID)：" + id4, "weight": "bold", "size": "lg", "color": "#F45F00", "margin": "sm" }
+                    ]}
                 ]
             },
             "footer": {
                 "type": "box", "layout": "vertical", "spacing": "sm",
                 "contents": [
-                    { "type": "separator", "margin": "md" },
-                    { "type": "text", "text": "訂位代號：" + pnr, "weight": "bold", "size": "lg", "color": "#F45F00", "align": "center" },
-                    { "type": "button", "style": "primary", "color": "#06C755", "action": { "type": "clipboard", "label": "點擊複製【訂位代號】", "clipboardText": pnr } },
-                    { "type": "button", "style": "primary", "color": "#06C755", "action": { "type": "clipboard", "label": "點擊複製【驗證碼】", "clipboardText": id4 } }
+                    { "type": "button", "style": "primary", "color": "#06C755", "height": "sm", "action": { "type": "clipboard", "label": "點擊複製【訂位代號】", "clipboardText": pnr } },
+                    { "type": "button", "style": "primary", "color": "#06C755", "height": "sm", "action": { "type": "clipboard", "label": "點擊複製【驗證碼】", "clipboardText": id4 } }
                 ]
             }
         };
 
-        // 如果有回程，插入回程資訊到 body
-        if (hasReturn) {
-            contents.body.contents.push({ "type": "separator", "margin": "md" });
-            contents.body.contents.push({ "type": "text", "text": "【回程】 " + document.getElementById('sl2').value + " → " + document.getElementById('dl2').value, "weight": "bold", "size": "md" });
-            contents.body.contents.push({ "type": "text", "text": document.getElementById('date2').value + "  " + document.getElementById('time2').value, "size": "sm", "color": "#666666" });
-            contents.body.contents.push({ "type": "text", "text": document.getElementById('seat2').value, "size": "sm", "color": "#666666" });
+        // 如果有回程，動態插入行程資訊
+        if (isRe) {
+            bubble.body.contents.splice(2, 0, 
+                { "type": "separator", "margin": "md" },
+                { "type": "text", "text": "【回程】 " + document.getElementById('r2').value, "weight": "bold", "size": "md" },
+                { "type": "text", "text": document.getElementById('d2').value + "  " + document.getElementById('s2').value, "size": "sm", "color": "#666666", "wrap": true }
+            );
         }
 
-        // 呼叫 LINE 分享視窗
-        if (liff.isApiAvailable('shareTargetPicker')) {
-            liff.shareTargetPicker([{ "type": "flex", "altText": "🚄 高鐵取票通知", "contents": contents }])
-                .then((res) => { if (res) liff.closeWindow(); })
-                .catch(err => alert("分享失敗，請檢查權限"));
-        }
+        // 呼叫分享功能
+        liff.shareTargetPicker([{ "type": "flex", "altText": "🚄 您有一則高鐵取票通知", "contents": bubble }])
+            .then(res => { if(res) liff.closeWindow(); })
+            .catch(e => alert("分享失敗，請確認 LINE 權限設定。"));
     };
 </script>
-
 </body>
 </html>
