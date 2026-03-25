@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高鐵秘書系統 v8</title>
+    <title>高鐵秘書系統 v9</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: -apple-system, sans-serif; padding: 15px; background-color: #f4f7f9; }
@@ -20,15 +20,12 @@
 
 <div class="card">
     <h3>🚄 訂票資訊核對</h3>
-    
     <div class="group">
         <label>【去程行程】</label>
-        <input type="text" id="d1" placeholder="日期">
-        <input type="text" id="r1" placeholder="起點 → 終點">
-        <input type="text" id="t1" placeholder="時間 (例如 08:00 - 09:30)">
-        <input type="text" id="s1" placeholder="車次 / 座位">
+        <input type="text" id="d1">
+        <input type="text" id="r1">
+        <input type="text" id="t1"> <input type="text" id="s1">
     </div>
-
     <div id="reArea" class="group" style="display:none;">
         <label>【回程行程】</label>
         <input type="text" id="d2">
@@ -36,14 +33,12 @@
         <input type="text" id="t2">
         <input type="text" id="s2">
     </div>
-
     <div class="group">
         <label>訂位代號 (PNR)</label>
         <input type="text" id="pnr" class="pnr-field">
         <label>取票驗證碼 (預設)</label>
         <input type="text" id="id4" value="0114" class="pnr-field">
     </div>
-
     <button id="btnShare">確認並發送給長官</button>
 </div>
 
@@ -55,10 +50,11 @@
         if (!liff.isLoggedIn()) { liff.login(); }
         const p = new URLSearchParams(window.location.search);
         
+        // 抓取網址參數
         document.getElementById('d1').value = decodeURIComponent(p.get('date1') || '');
         document.getElementById('r1').value = decodeURIComponent(p.get('sl1') || '') + " → " + decodeURIComponent(p.get('dl1') || '');
         document.getElementById('t1').value = (p.get('st1') || '') + " - " + (p.get('et1') || '');
-        document.getElementById('s1').value = (p.get('tn1') || '') + " 車次 / " + decodeURIComponent(p.get('seat1') || '');
+        document.getElementById('s1').value = "車次 " + (p.get('tn1') || '') + " / " + decodeURIComponent(p.get('seat1') || '');
         document.getElementById('pnr').value = p.get('pnr') || '';
 
         if (p.get('sl2')) {
@@ -67,7 +63,7 @@
             document.getElementById('d2').value = decodeURIComponent(p.get('date2') || '');
             document.getElementById('r2').value = decodeURIComponent(p.get('sl2') || '') + " → " + decodeURIComponent(p.get('dl2') || '');
             document.getElementById('t2').value = (p.get('st2') || '') + " - " + (p.get('et2') || '');
-            document.getElementById('s2').value = (p.get('tn2') || '') + " 車次 / " + decodeURIComponent(p.get('seat2') || '');
+            document.getElementById('s2').value = "車次 " + (p.get('tn2') || '') + " / " + decodeURIComponent(p.get('seat2') || '');
         }
     });
 
@@ -75,35 +71,33 @@
         const pnr = document.getElementById('pnr').value;
         const id4 = document.getElementById('id4').value;
 
-        // 核心：手動構建 body 內容陣列，確保順序不亂
+        // 【重點】：這段 bodyContents 就是長官會看到的卡片內容
         let bodyContents = [
             { "type": "text", "text": "【去程】 " + document.getElementById('r1').value, "weight": "bold", "size": "md" },
-            { "type": "text", "text": "時間：" + document.getElementById('t1').value, "size": "sm", "color": "#111111", "weight": "bold" },
-            { "type": "text", "text": "日期：" + document.getElementById('d1').value + "  " + document.getElementById('s1').value, "size": "sm", "color": "#666666", "wrap": true }
+            { "type": "text", "text": "時間：" + document.getElementById('t1').value, "size": "sm", "weight": "bold", "color": "#000000" },
+            { "type": "text", "text": "日期：" + document.getElementById('d1').value + "  " + document.getElementById('s1').value, "size": "xs", "color": "#666666", "wrap": true }
         ];
 
-        // 如果有回程，推入回程資訊
         if (isRe) {
             bodyContents.push({ "type": "separator", "margin": "md" });
             bodyContents.push({ "type": "text", "text": "【回程】 " + document.getElementById('r2').value, "weight": "bold", "size": "md" });
-            bodyContents.push({ "type": "text", "text": "時間：" + document.getElementById('t2').value, "size": "sm", "color": "#111111", "weight": "bold" });
-            bodyContents.push({ "type": "text", "text": "日期：" + document.getElementById('d2').value + "  " + document.getElementById('s2').value, "size": "sm", "color": "#666666", "wrap": true });
+            bodyContents.push({ "type": "text", "text": "時間：" + document.getElementById('t2').value, "size": "sm", "weight": "bold", "color": "#000000" });
+            bodyContents.push({ "type": "text", "text": "日期：" + document.getElementById('d2').value + "  " + document.getElementById('s2').value, "size": "xs", "color": "#666666", "wrap": true });
         }
 
-        // 最後推入橘色代號區塊
         bodyContents.push({ "type": "separator", "margin": "lg" });
         bodyContents.push({
             "type": "box", "layout": "vertical", "margin": "lg", "contents": [
                 { "type": "text", "text": "訂位代號 (PNR)", "size": "xs", "color": "#aaaaaa" },
-                { "type": "text", "text": pnr, "weight": "bold", "size": "xxl", "color": "#F45F00", "margin": "xs" },
-                { "type": "text", "text": "驗證碼 (ID)：" + id4, "weight": "bold", "size": "lg", "color": "#F45F00", "margin": "sm" }
+                { "type": "text", "text": pnr, "weight": "bold", "size": "xxl", "color": "#F45F00" },
+                { "type": "text", "text": "驗證碼 (ID)：" + id4, "weight": "bold", "size": "lg", "color": "#F45F00", "margin": "xs" }
             ]
         });
 
         const bubble = {
             "type": "bubble",
-            "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程 取票通知", "color": "#ffffff", "weight": "bold", "size": "md"}], "backgroundColor": "#F45F00" },
-            "body": { "type": "box", "layout": "vertical", "spacing": "md", "contents": bodyContents },
+            "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程 取票通知", "color": "#ffffff", "weight": "bold"}], "backgroundColor": "#F45F00" },
+            "body": { "type": "box", "layout": "vertical", "spacing": "sm", "contents": bodyContents },
             "footer": {
                 "type": "box", "layout": "vertical", "spacing": "sm",
                 "contents": [
@@ -113,7 +107,7 @@
             }
         };
 
-        liff.shareTargetPicker([{ "type": "flex", "altText": "🚄 高鐵行程通知", "contents": bubble }])
+        liff.shareTargetPicker([{ "type": "flex", "altText": "🚄 高鐵取票通知", "contents": bubble }])
             .then(res => { if(res) liff.closeWindow(); })
             .catch(e => alert("分享失敗"));
     };
