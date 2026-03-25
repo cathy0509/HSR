@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>資訊確認</title>
+    <title>資訊確認 v3</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: sans-serif; padding: 20px; background-color: #f0f2f5; }
@@ -11,12 +11,12 @@
         .field { margin-top: 10px; }
         label { display: block; font-size: 12px; color: #888; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 15px; background: #F45F00; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        button { width: 100%; padding: 15px; background: #06C755; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color:#F45F00; text-align:center;">🚄 訂票資訊確認</h2>
+        <h2 style="color:#F45F00; text-align:center;">🚄 訂票資訊確認 (v3)</h2>
         <div class="field"><label>日期</label><input type="text" id="date"></div>
         <div style="display:flex; gap:10px;">
             <div class="field" style="flex:1;"><label>起點</label><input type="text" id="sl"></div>
@@ -36,21 +36,29 @@
     </div>
 
     <script>
+        // 暴力解析網址參數函數
+        function getParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name) || '';
+        }
+
         liff.init({ liffId: "2009593705-UXqntLN7" }).then(() => {
-            if (!liff.isLoggedIn()) { liff.login(); }
-            const p = new URLSearchParams(window.location.search);
-            
-            // 參數完全對應 Python
-            document.getElementById('date').value = decodeURIComponent(p.get('date') || '');
-            document.getElementById('sl').value = decodeURIComponent(p.get('sl') || '');
-            document.getElementById('dl').value = decodeURIComponent(p.get('dl') || '');
-            document.getElementById('st').value = p.get('st') || '';
-            document.getElementById('et').value = p.get('et') || '';
-            document.getElementById('tn').value = p.get('tn') || '';
-            document.getElementById('seat').value = decodeURIComponent(p.get('seat') || '');
-            document.getElementById('pnr').value = p.get('pnr') || '';
-            document.getElementById('id4').value = p.get('id4') || '0114';
-        });
+            if (!liff.isLoggedIn()) { 
+                liff.login(); 
+            } else {
+                console.log("開始填充資料...");
+                // 讀取並填入，增加 decodeURIComponent 確保中文不亂碼
+                document.getElementById('date').value = decodeURIComponent(getParam('date'));
+                document.getElementById('sl').value = decodeURIComponent(getParam('sl'));
+                document.getElementById('dl').value = decodeURIComponent(getParam('dl'));
+                document.getElementById('st').value = getParam('st');
+                document.getElementById('et').value = getParam('et');
+                document.getElementById('tn').value = getParam('tn');
+                document.getElementById('seat').value = decodeURIComponent(getParam('seat'));
+                document.getElementById('pnr').value = getParam('pnr');
+                document.getElementById('id4').value = getParam('id4') || '0114';
+            }
+        }).catch(err => console.error("LIFF 初始化失敗", err));
 
         document.getElementById('btnShare').onclick = () => {
             const d = {
@@ -82,7 +90,7 @@
                         { "type": "button", "style": "primary", "color": "#06C755", "action": { "type": "clipboard", "label": "點擊複製【驗證碼】", "clipboardText": d.id4 } }
                     ]}
                 }
-            }]).then(() => liff.closeWindow()).catch(() => alert("分享失敗，請確認權限"));
+            }]).then(res => { if(res) liff.closeWindow(); }).catch(() => alert("分享失敗，請檢查權限"));
         };
     </script>
 </body>
