@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高鐵秘書系統 v7</title>
+    <title>高鐵秘書系統 v8</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         body { font-family: -apple-system, sans-serif; padding: 15px; background-color: #f4f7f9; }
@@ -13,7 +13,7 @@
         label { font-size: 11px; color: #999; display: block; margin-bottom: 2px; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 8px; font-size: 14px; background: #fafafa; }
         .pnr-field { color: #F45F00; font-weight: bold; border-color: #F45F00; background: #fff; font-size: 18px; }
-        button#btnShare { width: 100%; padding: 16px; background: #F45F00; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 10px rgba(244, 95, 0, 0.3); }
+        button#btnShare { width: 100%; padding: 16px; background: #F45F00; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -25,7 +25,7 @@
         <label>【去程行程】</label>
         <input type="text" id="d1" placeholder="日期">
         <input type="text" id="r1" placeholder="起點 → 終點">
-        <input type="text" id="t1" placeholder="出發時間 - 抵達時間">
+        <input type="text" id="t1" placeholder="時間 (例如 08:00 - 09:30)">
         <input type="text" id="s1" placeholder="車次 / 座位">
     </div>
 
@@ -55,14 +55,12 @@
         if (!liff.isLoggedIn()) { liff.login(); }
         const p = new URLSearchParams(window.location.search);
         
-        // 填入去程
         document.getElementById('d1').value = decodeURIComponent(p.get('date1') || '');
         document.getElementById('r1').value = decodeURIComponent(p.get('sl1') || '') + " → " + decodeURIComponent(p.get('dl1') || '');
         document.getElementById('t1').value = (p.get('st1') || '') + " - " + (p.get('et1') || '');
         document.getElementById('s1').value = (p.get('tn1') || '') + " 車次 / " + decodeURIComponent(p.get('seat1') || '');
         document.getElementById('pnr').value = p.get('pnr') || '';
 
-        // 填入回程
         if (p.get('sl2')) {
             isRe = true;
             document.getElementById('reArea').style.display = 'block';
@@ -77,23 +75,35 @@
         const pnr = document.getElementById('pnr').value;
         const id4 = document.getElementById('id4').value;
 
+        // 核心：手動構建 body 內容陣列，確保順序不亂
+        let bodyContents = [
+            { "type": "text", "text": "【去程】 " + document.getElementById('r1').value, "weight": "bold", "size": "md" },
+            { "type": "text", "text": "時間：" + document.getElementById('t1').value, "size": "sm", "color": "#111111", "weight": "bold" },
+            { "type": "text", "text": "日期：" + document.getElementById('d1').value + "  " + document.getElementById('s1').value, "size": "sm", "color": "#666666", "wrap": true }
+        ];
+
+        // 如果有回程，推入回程資訊
+        if (isRe) {
+            bodyContents.push({ "type": "separator", "margin": "md" });
+            bodyContents.push({ "type": "text", "text": "【回程】 " + document.getElementById('r2').value, "weight": "bold", "size": "md" });
+            bodyContents.push({ "type": "text", "text": "時間：" + document.getElementById('t2').value, "size": "sm", "color": "#111111", "weight": "bold" });
+            bodyContents.push({ "type": "text", "text": "日期：" + document.getElementById('d2').value + "  " + document.getElementById('s2').value, "size": "sm", "color": "#666666", "wrap": true });
+        }
+
+        // 最後推入橘色代號區塊
+        bodyContents.push({ "type": "separator", "margin": "lg" });
+        bodyContents.push({
+            "type": "box", "layout": "vertical", "margin": "lg", "contents": [
+                { "type": "text", "text": "訂位代號 (PNR)", "size": "xs", "color": "#aaaaaa" },
+                { "type": "text", "text": pnr, "weight": "bold", "size": "xxl", "color": "#F45F00", "margin": "xs" },
+                { "type": "text", "text": "驗證碼 (ID)：" + id4, "weight": "bold", "size": "lg", "color": "#F45F00", "margin": "sm" }
+            ]
+        });
+
         const bubble = {
             "type": "bubble",
             "header": { "type": "box", "layout": "vertical", "contents": [{"type": "text", "text": "🚄 高鐵行程 取票通知", "color": "#ffffff", "weight": "bold", "size": "md"}], "backgroundColor": "#F45F00" },
-            "body": {
-                "type": "box", "layout": "vertical", "spacing": "md",
-                "contents": [
-                    { "type": "text", "text": "【去程】 " + document.getElementById('r1').value, "weight": "bold", "size": "md" },
-                    { "type": "text", "text": "時間：" + document.getElementById('t1').value, "size": "sm", "color": "#111111", "weight": "bold" },
-                    { "type": "text", "text": "日期：" + document.getElementById('d1').value + "  " + document.getElementById('s1').value, "size": "sm", "color": "#666666", "wrap": true },
-                    { "type": "separator", "margin": "lg" },
-                    { "type": "box", "layout": "vertical", "margin": "lg", "contents": [
-                        { "type": "text", "text": "訂位代號 (PNR)", "size": "xs", "color": "#aaaaaa" },
-                        { "type": "text", "text": pnr, "weight": "bold", "size": "xxl", "color": "#F45F00", "margin": "xs" },
-                        { "type": "text", "text": "驗證碼 (ID)：" + id4, "weight": "bold", "size": "lg", "color": "#F45F00", "margin": "sm" }
-                    ]}
-                ]
-            },
+            "body": { "type": "box", "layout": "vertical", "spacing": "md", "contents": bodyContents },
             "footer": {
                 "type": "box", "layout": "vertical", "spacing": "sm",
                 "contents": [
@@ -102,15 +112,6 @@
                 ]
             }
         };
-
-        if (isRe) {
-            bubble.body.contents.splice(3, 0, 
-                { "type": "separator", "margin": "md" },
-                { "type": "text", "text": "【回程】 " + document.getElementById('r2').value, "weight": "bold", "size": "md" },
-                { "type": "text", "text": "時間：" + document.getElementById('t2').value, "size": "sm", "color": "#111111", "weight": "bold" },
-                { "type": "text", "text": "日期：" + document.getElementById('d2').value + "  " + document.getElementById('s2').value, "size": "sm", "color": "#666666", "wrap": true }
-            );
-        }
 
         liff.shareTargetPicker([{ "type": "flex", "altText": "🚄 高鐵行程通知", "contents": bubble }])
             .then(res => { if(res) liff.closeWindow(); })
